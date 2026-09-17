@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEUTRINO · Energy report</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --card: #fffdf8;
+      --border: #e2dacd;
+      --ink: #1c1914;
+      --muted: #78716c;
+      --olive: #2c3f32;
+      --green: #1b6b48;
+      --blue: #1d4e89;
+      --warn: #b45309;
+      --bad: #b91c1c;
+    }
+    body {
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      margin: 0;
+      padding: 32px 16px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+    .wordmark {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--olive);
+      margin-bottom: 4px;
+    }
+    h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 0 0 12px 0;
+      letter-spacing: -0.01em;
+    }
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 3px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--olive);
+    }
+    .pill-strong {
+      background: #e7e0d3;
+      border-color: #d8cebe;
+      font-weight: 600;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    h2 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--olive);
+      margin: 0 0 6px 0;
+    }
+    .caption {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    /* Hero Cards */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .hero-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justifyContent: space-between;
+    }
+    .hero-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .hero-val {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 1.1;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .hero-val.val-no-ref {
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: -0.01em;
+    }
+    .hero-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .hero-chip {
+      display: inline-block;
+      background: #f4efe6;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--olive);
+      align-self: flex-start;
+    }
+    .hero-instruct {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+    }
+    .val-green { color: var(--green); }
+    .val-blue { color: var(--blue); }
+    .val-warn { color: var(--warn); }
+    .val-bad { color: var(--bad); }
+    .val-muted { color: var(--muted); }
+    .val-no-ref { color: var(--muted); }
+    .wrap-banner {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+    .wrap-banner strong {
+      color: var(--ink);
+    }
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 13px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    th {
+      background: #eee8dc;
+      color: var(--olive);
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fdfbf7; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    /* Details */
+    details {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 12px;
+    }
+    summary {
+      font-weight: 600;
+      color: var(--olive);
+      cursor: pointer;
+      outline: none;
+    }
+    details[open] summary {
+      margin-bottom: 16px;
+    }
+    /* Fixed time cards */
+    .fixed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .fixed-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .fixed-header {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--olive);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .fixed-metric {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    footer {
+      border-top: 2px solid var(--border);
+      padding-top: 24px;
+      margin-top: 48px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="wordmark">NEUTRINO · 0.5.2</div>
+      <h1>Energy report</h1>
+      <div class="meta-bar">
+        <div><strong>Window:</strong> 2026-09-16 03:53:37 UTC &rarr; 2026-09-16 10:16:08 UTC (6.38 h)</div>
+        <div><strong>Node:</strong> neutrino-9320d313fe6e431db7110476fb05ec06</div>
+        <div><strong>Generated:</strong> 2026-09-16 10:16:49 UTC</div>
+      </div>
+      <div class="pills">
+        <div class="pill">SKU: NEUTRINO</div>
+        <div class="pill">Apply: Licensed</div>
+        <div class="pill">Source: desk</div>
+        <div class="pill pill-strong">0 / 2 classes qualify (minimum 5 jobs per arm)</div>
+      </div>
+    </header>
+    <div class="section">
+      <div class="hero-grid">
+        <!-- Card 1: Energy per job -->
+        <div class="hero-card">
+          <div>
+            <div class="hero-title">Energy per job</div>
+            <div class="hero-val val-no-ref">no reference</div>
+            <div class="hero-sub">vs no-policy jobs of the same class</div>
+            <div class="hero-chip">no reference</div>
+          </div>
+          <div class="hero-instruct">Widen --since to a period before apply was approved, or revoke one class and wrap five jobs.</div>
+        </div>
+        <!-- Card 2: Time per job -->
+        <div class="hero-card">
+          <div>
+            <div class="hero-title">Time per job</div>
+            <div class="hero-val val-no-ref">no reference</div>
+            <div class="hero-sub">Same weighting</div>
+            <div class="hero-chip">Faster, not idle-subtracted</div>
+          </div>
+          <div class="hero-instruct">Same class weighting</div>
+        </div>
+        <!-- Card 3: Jobs per hour -->
+        <div class="hero-card">
+          <div>
+            <div class="hero-title">Jobs per hour</div>
+            <div class="hero-val val-no-ref">no reference</div>
+            <div class="hero-sub">overall throughput Δ% on vs off, per hour</div>
+            <div class="hero-chip">Requires 15m on and 15m off</div>
+          </div>
+          <div class="hero-instruct">Keep apply off for at least 15 minutes of wall clock, then on for at least 15 minutes, and regenerate.</div>
+        </div>
+        <!-- Card 4: Socket joules / hour -->
+        <div class="hero-card">
+          <div>
+            <div class="hero-title">Socket joules / hour</div>
+            <div class="hero-val val-no-ref">no reference</div>
+            <div class="hero-sub">package RAPL intensity Δ%</div>
+            <div class="hero-chip">Socket, not job-only</div>
+          </div>
+          <div class="hero-instruct">Keep apply off for at least 15 minutes of wall clock, then on for at least 15 minutes, and regenerate.</div>
+        </div>
+      </div>
+      <div class="wrap-banner"><strong>Job wrap coverage:</strong> 0.0% (fraction of package joules that were wrapped jobs, not a savings ratio)</div>
+    </div>
+    <div class="section">
+      <h2>Per-class energy and duration (two-arm comparison)</h2>
+      <div class="caption">Same class. Not a byte-matched campaign unless work_hash matches. Serial jobs/h = 3600 / mean duration.</div>
+      <p style="color: var(--muted); font-style: italic;">No classes qualify for two-arm comparison (minimum 5 jobs per arm with t &ge; 1s required).</p>
+    </div>
+    <div class="section">
+      <h2>Meter-only classes</h2>
+      <div class="caption">Classes with fewer than 5 jobs in either arm, subsecond-only durations, or unlicensed unmanaged workloads. No &Delta;% is computed.</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Reason</th>
+            <th class="num">Total Jobs</th>
+            <th class="num">n_off</th>
+            <th class="num">n_on</th>
+            <th class="num">Energy (J)</th>
+            <th class="num">Mean Power (W, t &ge; 1s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>batch</strong></td><td><span style="color: var(--muted);">no reference — no unapplied jobs in window</span></td><td class="num">1</td><td class="num">0</td><td class="num">1</td><td class="num">9.777</td><td class="num">4.87</td></tr>
+          <tr><td><strong>unspecified</strong></td><td><span style="color: var(--muted);">unmanaged class (meter-only)</span></td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0.132</td><td class="num">n/a</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="section">
+      <h2>Host package energy (always-on meter)</h2>
+      <div class="caption">Neutrino records package RAPL every 60 s whether or not a job is wrapped and whether or not apply is licensed. This is energy <em>spent</em> on the socket. It is not energy saved.</div>
+      <div class="hero-grid">
+        <div class="hero-card"><div class="hero-title">Samples</div><div class="hero-val" style="font-size:24px;">380</div></div>
+        <div class="hero-card"><div class="hero-title">Total Spent (kJ)</div><div class="hero-val" style="font-size:24px;">227.80</div></div>
+        <div class="hero-card"><div class="hero-title">Mean Power (W)</div><div class="hero-val" style="font-size:24px;">9.99</div></div>
+        <div class="hero-card"><div class="hero-title">p50 / p95 (W)</div><div class="hero-val" style="font-size:24px;">11.44 / 11.68</div></div>
+      </div>
+      <div style="margin: 16px 0;">        <div class="caption">Recent Power Samples (W): min 6.5W, max 11.8W</div>        <svg width="100%" height="90" viewBox="0 0 680 90" style="background: var(--card); border-radius: 6px; border: 1px solid var(--border);">          <polyline fill="none" stroke="var(--olive)" stroke-width="2" points="16.0,18.5 44.2,67.6 72.3,61.1 100.5,74.0 128.7,55.3 156.9,18.4 185.0,18.2 213.2,19.4 241.4,18.5 269.6,19.2 297.7,19.6 325.9,18.4 354.1,17.5 382.3,18.8 410.4,18.1 438.6,30.1 466.8,73.9 495.0,48.4 523.1,19.3 551.3,18.6 579.5,34.9 607.7,73.8 635.8,43.0 664.0,16.0" />        </svg>      </div>
+      <details>
+        <summary>Raw RAPL samples</summary>
+        <table style="margin-top: 12px;">
+          <thead>
+            <tr>
+              <th>Sample Time (UTC)</th>
+              <th class="num">Interval (s)</th>
+              <th class="num">Package Energy (J)</th>
+              <th class="num">Power (W)</th>
+              <th>Governor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>2026-09-16 09:53:08</td><td class="num">60.0</td><td class="num">692.384</td><td class="num">11.54</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 09:54:08</td><td class="num">60.0</td><td class="num">422.720</td><td class="num">7.05</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 09:55:08</td><td class="num">60.0</td><td class="num">458.319</td><td class="num">7.64</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 09:56:08</td><td class="num">60.0</td><td class="num">387.552</td><td class="num">6.46</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 09:57:08</td><td class="num">60.0</td><td class="num">490.151</td><td class="num">8.17</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 09:58:08</td><td class="num">60.0</td><td class="num">692.802</td><td class="num">11.55</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 09:59:08</td><td class="num">60.0</td><td class="num">694.381</td><td class="num">11.57</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:00:08</td><td class="num">60.0</td><td class="num">687.871</td><td class="num">11.46</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:01:08</td><td class="num">60.0</td><td class="num">692.566</td><td class="num">11.54</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:02:08</td><td class="num">60.0</td><td class="num">688.712</td><td class="num">11.48</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:03:08</td><td class="num">60.0</td><td class="num">686.247</td><td class="num">11.44</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:04:08</td><td class="num">60.0</td><td class="num">692.995</td><td class="num">11.55</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:05:08</td><td class="num">60.0</td><td class="num">698.193</td><td class="num">11.63</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:06:08</td><td class="num">60.0</td><td class="num">690.993</td><td class="num">11.51</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:07:08</td><td class="num">60.0</td><td class="num">694.949</td><td class="num">11.58</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:08:08</td><td class="num">60.0</td><td class="num">629.169</td><td class="num">10.48</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:09:08</td><td class="num">60.0</td><td class="num">388.214</td><td class="num">6.47</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:10:08</td><td class="num">60.0</td><td class="num">528.046</td><td class="num">8.80</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:11:08</td><td class="num">60.0</td><td class="num">688.070</td><td class="num">11.47</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:12:08</td><td class="num">60.0</td><td class="num">691.591</td><td class="num">11.53</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:13:08</td><td class="num">60.0</td><td class="num">602.385</td><td class="num">10.04</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:14:08</td><td class="num">60.0</td><td class="num">388.757</td><td class="num">6.48</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:15:08</td><td class="num">60.0</td><td class="num">558.485</td><td class="num">9.30</td><td>powersave</td></tr>
+            <tr><td>2026-09-16 10:16:08</td><td class="num">60.0</td><td class="num">706.328</td><td class="num">11.77</td><td>powersave</td></tr>
+          </tbody>
+        </table>
+      </details>
+    </div>
+    <div class="section">
+      <h2>Fixed-time on vs off</h2>
+      <div class="caption">Calendar time partitioned by policy activation. Unequal spans are normalized per hour. Socket metrics include background OS load.</div>
+      <p style="color: var(--muted); font-style: italic;">no reference — Keep apply off for at least 15 minutes of wall clock, then on for at least 15 minutes, and regenerate.</p>
+    </div>
+    <div class="section">
+      <details>
+        <summary>Policy versions (not a savings table)</summary>
+        <table style="margin-top: 12px;">
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Version ID</th>
+              <th>Action</th>
+              <th>Window</th>
+              <th class="num">Stamped Jobs</th>
+              <th class="num">Energy (J)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>mq</strong></td><td><code>v-20260913133229-44e589dd</code></td><td>approve</td><td>2026-09-13 13:32:29 -&gt; ACTIVE</td><td class="num">0</td><td class="num">0.000</td></tr>
+            <tr><td><strong>oltp</strong></td><td><code>v-20260913140835-767ecff3</code></td><td>approve</td><td>2026-09-13 14:08:35 -&gt; ACTIVE</td><td class="num">0</td><td class="num">0.000</td></tr>
+            <tr><td><strong>oltp-conn</strong></td><td><code>v-20260913143323-ae4ef100</code></td><td>revoke</td><td>2026-09-13 14:33:23 -&gt; ACTIVE</td><td class="num">0</td><td class="num">0.000</td></tr>
+            <tr><td><strong>batch</strong></td><td><code>v-20260913150003-5e4b89ce</code></td><td>auto_apply</td><td>2026-09-13 15:00:03 -&gt; ACTIVE</td><td class="num">1</td><td class="num">9.777</td></tr>
+            <tr><td><strong>compile</strong></td><td><code>v-20260913151545-7125f3d7</code></td><td>auto_apply</td><td>2026-09-13 15:15:45 -&gt; ACTIVE</td><td class="num">0</td><td class="num">0.000</td></tr>
+          </tbody>
+        </table>
+      </details>
+    </div>
+    <footer>
+      <div>Observe meters. Apply is licensed wrap — Neutrino does not rewrite the job binary.</div>
+      <div>Campaign A/B ids (*-A-* / *-B-*) are not auto-paired unless --pair-ab is set.</div>
+    </footer>
+  </div>
+</body>
+</html>
