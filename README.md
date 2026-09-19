@@ -163,7 +163,7 @@ SLURM_JOB_ID=123 SLURM_JOB_CPUS=8 sudo neutrino-srun --class hpc -- ./solver
 
 ### 2. Autopilot Management
 
-Autopilot coordinates governance across all approved profiles in the policy configuration:
+Autopilot coordinates governance across all approved profiles in the policy configuration. Autopilot ACT attaches a recipe systemd .service when that class is saving (n≥5 both arms, t≥1s, ΔE≤−5%) and dummy-ok; detaches when not. Stock recipe ships zero targets.
 
 ```bash
 # Dry run inspection (inspect without applying state)
