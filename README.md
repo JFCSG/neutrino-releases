@@ -1,207 +1,203 @@
 # Neutrino 0.5.10
 
-Signed **CPU installer drop**. This repository is not the product source tree.
+Signed CPU Installer Drop
 
-Neutrino is an enterprise-grade energy accounting engine and autonomous governor for Linux servers. It meters package joules (Intel RAPL, `method: uj_delta`), wraps named jobs, and — when licensed — applies a **policy wrap** around work the operator already runs. It does not rewrite customer binaries, does not change CPU scaling governors or sysfs dials, and does not expose an actuation API.
+Notice: This repository distributes pre-compiled deployment packages and cryptographic verification manifests. Source code and proprietary engine internals are maintained in a private repository.
 
-| File | Role |
+Neutrino is an enterprise-grade energy accounting engine and autonomous governor for Linux server infrastructure. It meters package energy via Intel RAPL, wraps standard job execution, and applies autonomous optimization policies to target workloads.
+
+Neutrino operates non-invasively: it does not rewrite or patch binaries, does not manipulate kernel CPU scaling governors or sysfs parameters, and exposes no external actuation control plane.
+
+## Release Artifacts
+
+| File | Description |
 | --- | --- |
-| `neutrino_0.5.10_amd64.deb` | Linux amd64 package |
-| `SHA256SUMS` | SHA-256 manifest of the `.deb` release package |
-| `SHA256SUMS.sig` | Detached Post-Quantum DSA-16 Level 3 signature of `SHA256SUMS` |
-| `sample-report.html` | Buyer energy-report layout (existing preview) |
+| `neutrino_0.5.10_amd64.deb` | Linux amd64 production package |
+| `SHA256SUMS` | SHA-256 cryptographic manifest |
+| `SHA256SUMS.sig` | Detached Post-Quantum Level 3 signature of `SHA256SUMS` |
+| `sample-report.html` | Client reporting dashboard preview (illustrative layout; not a contract or live host telemetry) |
 
-Open `sample-report.html` for the buyer report page layout. Numbers there are a layout preview of campaign-style class stats, not a live host dump or a quoted SLA contract.
+## Operational Architecture
 
----
+Neutrino runs as an isolated system daemon supporting two modes:
 
-## What It Does
+**Observe Mode (Standard / Default)**
 
-Two modes on one daemon:
+Installs in a passive state. The daemon listens exclusively on local loopback (`127.0.0.1:8741`) to meter energy consumed by wrapped processes (`neutrino-run`, `neutrino-srun`, `neutrino-bsub`). Requires no licensing papers, external network connectivity, or vendor access tokens.
 
-**Observe (always free).** After installation, the daemon listens exclusively on loopback `127.0.0.1:8741`, records RAPL package energy, and measures jobs wrapped with `neutrino-run`, `neutrino-srun`, or `neutrino-bsub`. Zero licensing, tokens, or vendor contact required. This is the try-before-buy meter.
+**Apply Mode (Licensed)**
 
-**Apply (licensed).** A Post-Quantum DSA-16 Level 3 signed desk paper (`lease.json` + `lease.sig`, with `sku=NEUTRINO`, unexpired, fingerprint-bound, unseen nonce, and `claims.apply=true`) enables autonomous governing. When the operator turns **autopilot** on, eligible classes on the host recipe go `watching`, then independently transition to `saving` or `off (retry next pass)`. Apply is a wrapper and ledger timestamp. Neutrino never patches customer workloads.
+Activated using cryptographically signed offline authorization papers (`lease.json` + `lease.sig`). Enables autonomous energy optimization policies across workloads defined in the host policy configuration.
 
-`POST /v1/actuate` unconditionally returns HTTP `403 Forbidden`. Actuate is not a user feature. CPU frequencies, scaling governors, cgroups, and sysfs are strictly untouched.
+**Execution Boundary:** `POST /v1/actuate` strictly returns HTTP 403 Forbidden. Neutrino is governed entirely through declarative local policies and wrapper lifecycles; it does not allow remote or external parameter actuation.
 
----
+## Workload Classification and Autonomous Validation
 
-## Workload Classes & The -5% Holdout Gate
+### Supported Workload Profiles
 
-Neutrino defines an exact schema of 11 workload classes. All 11 classes must be specified in `/etc/neutrino/recipe.json`; missing class slugs are **rejected** (they do not default to `meter_only`):
+Neutrino categorizes workloads into defined operational profiles declared in the host policy configuration. Workload policies define the governance boundary:
 
-| Class | Lever (when apply is on) | Notes |
+| Profile | Category | Scope |
 | --- | --- | --- |
-| `compile` | materialize / warm artifacts | Materialize lever |
-| `infer-cpu` | materialize | Materialize lever |
-| `batch` | occupancy (pack-then-idle) | HPC/render analog |
-| `oltp` | group-commit | Commit coalescing analog |
-| `mq` | batched fsync | Persist-batch analog, not a message broker |
-| `hpc` | occupancy | Scheduler wrap (`SLURM_*` / LSF env) |
-| `render` | occupancy | Scheduler wrap (`SLURM_*` / LSF env) |
-| `etl` | residency (stream vs retain) | Meter-only by default; cannot save unless explicitly configured and clearing threshold |
-| `idle` | none | Mandatory meter-only floor — never a savings class |
-| `heartbeat` | none | Mandatory meter-only floor — never a savings class |
-| `unspecified` | none | Mandatory meter-only fallback — never a savings class |
+| `compile` | Build Systems | Compilation, linking, and artifact generation |
+| `infer-cpu` | AI / ML | CPU-bound model inference and scoring pipelines |
+| `batch` | Batch Compute | Throughput-intensive batch jobs |
+| `oltp` | Data Processing | Transaction and record-oriented workloads |
+| `mq` | Event Pipelines | High-frequency persistence and message queues |
+| `hpc` | High-Performance Compute | Workload manager jobs (`SLURM_*`, LSF) |
+| `render` | Asset Generation | Visual processing and simulation rendering |
+| `etl` | Data Engineering | Stream and transform processing (meter-only by default) |
+| `idle` | System Baseline | Passive system baseline (meter-only floor) |
+| `heartbeat` | Health Check | Daemon diagnostic floor (meter-only) |
+| `unspecified` | Fallback | Default unassigned workload envelope (meter-only) |
 
-### Empirical Proof on Your Host (No Quoted Lab SLAs)
-Neutrino does **not** quote synthetic lab percentages as an operational SLA. Savings are proved empirically on *your* hardware:
-- Every 20 job wraps, Neutrino samples a holdout run (un-optimized control run).
-- A class is labeled `saving` only when $n \ge 5$ live runs and $n \ge 5$ holdout runs have completed ($t \ge 1\text{s}$), and live mean energy is at least 5% lower than holdout mean energy ($\Delta E \le -5\%$).
-- If $\Delta E > -5\%$, the class is labeled `off (retry next pass)` for that window to avoid overhead, and re-evaluates automatically on the subsequent pass.
+### Continuous Statistical Holdout Validation
 
-### Report Labels
-```text
-watching              apply on; holdout window not yet complete
-saving                live window ≤ −5% package energy vs holdout
-off (retry next pass) this window failed threshold; re-armed next pass
-off                   not on the recipe / not approved
-meter_only            passive observation only (idle, heartbeat, unspecified, etl)
-```
+Neutrino does not rely on synthetic benchmarks or static efficiency claims. Energy savings are proven dynamically on production hardware through integrated A/B control testing:
 
-`neutrino report` is the operator page. `sample-report.html` is the buyer layout shipped with this drop.
+1. **Automated Control Holdouts:** The engine autonomously interleaves unoptimized baseline executions to maintain an ongoing control comparison.
+2. **Promotion Gate:** Autonomous optimization remains active only when candidate workloads demonstrate statistically significant, sustained package energy reduction against the control baseline.
+3. **Safety Fallback:** If a measurement window fails to meet required efficiency thresholds, governance automatically disengages (`off (retry next pass)`) to eliminate intervention overhead, re-evaluating during subsequent cycles.
 
----
+### Telemetry Status Definitions
 
-## Protected Targets: Deny List & Neutrino Service
+- `watching`: Policy active; holdout sampling window currently accumulating.
+- `saving`: Workload actively cleared the threshold, demonstrating statistically verified energy reduction.
+- `off (retry next pass)`: Performance threshold unreached in the current window; deferred to next evaluation cycle.
+- `off`: Profile inactive or omitted from the active policy.
+- `meter_only`: Dedicated energy accounting without policy intervention (`idle`, `heartbeat`, `unspecified`, `etl`).
 
-To guarantee host safety, the capture helper and recipe validator strictly refuse to wrap:
-- `oracle`
-- `postgres`
-- `mariadbd`
-- `mysqld`
-- `java`
-- `sshd`
-- `systemd`
+## Safety Controls and Protected Targets
 
-Wrapping `neutrino.service` is unconditionally rejected.
+To prevent service disruption to core infrastructure, Neutrino strictly refuses to profile or govern critical system processes:
 
----
+- Enterprise services and databases: `oracle`, `postgres`, `mariadbd`, `mysqld`, `java`
+- System infrastructure: `sshd`, `systemd`, `neutrino.service`
 
-## Verify, Stage, Then Install
+Execution wrappers will immediately reject attempts to run against these targets.
 
-Do not run `dpkg -i` from world-writable directories. Sudoers policies and installer integrity require staging in a root-protected path:
+## Installation and Deployment
+
+Package installation requires root staging to comply with standard enterprise privilege policies.
+
+### 1. Verify and Stage
 
 ```bash
-# 1. Verify package against signed manifest
+# Verify the installer against the post-quantum signed manifest
 neutrino pkg verify neutrino_0.5.10_amd64.deb SHA256SUMS SHA256SUMS.sig
 
-# 2. Stage to root-only path (mode 0700)
+# Stage package inside a restricted directory (mode 0700)
 sudo install -d -m 0700 /var/lib/neutrino/staging
 sudo cp neutrino_0.5.10_amd64.deb /var/lib/neutrino/staging/neutrino-install.deb
+```
 
-# 3. Install strictly from the staged path
+### 2. Install Package
+
+```bash
 sudo dpkg -i /var/lib/neutrino/staging/neutrino-install.deb
 sudo neutrino-setup --validate
 ```
 
-`pkg verify` checks the `.deb` hash against `SHA256SUMS` and validates the Post-Quantum DSA-16 Level 3 operator signature on that manifest. The operator public key ships in the package. There is no private signing key in this repository.
+### 3. Verify Daemon State
 
-Expected status:
-- `neutrino.service` active
-- `ss -ltn` shows loopback `127.0.0.1:8741` only
-- `GET /health` → `status: ok`, `version: 0.5.10`
-- `POST /v1/actuate` → `403 Forbidden`
+```bash
+# Check service status and loopback binding
+sudo systemctl status neutrino.service
+ss -ltn '( sport = :8741 )'   # Must show 127.0.0.1:8741 only
 
-Without a license paper, health reports Observe mode (`apply: false`).
+# Query daemon health status
+curl -s http://127.0.0.1:8741/health
+```
 
----
-
-## Uninstall
+## Uninstallation
 
 ```bash
 sudo neutrino-setup --uninstall
 ```
 
-Touched files restore from the pre-install backup. Ledger and node identity under `/var/lib/neutrino` are kept unless explicitly purged. Secrets (`token`, `lease.sig`, `node.sk`) are never restored back from backup tar archives.
+System configurations are restored from pre-install backups. Local ledgers and cryptographic identity files under `/var/lib/neutrino` are preserved unless explicitly purged.
 
----
+## Licensing and Offline Verification
 
-## Identity & Licensing
+Neutrino operates completely air-gapped. Authorization papers are signed offline and validated locally via quantum-resistant digital signatures.
 
-Neutrino does not mint operator signatures on customer hosts. The license desk signs papers offline. The host only **verifies**.
+### 1. Generate Node Identity
 
-1. **Print Identity**:
-   ```bash
-   sudo neutrino license enroll-print
-   ```
-   Transmit **only** `sku=NEUTRINO`, `node_id`, and `pk_sha256`. Never send `node.sk`.
-
-2. **Install Offline Papers**:
-   Place detached DSA-16 Level 3 signed papers (`lease.json` + `lease.sig`, and `recipe.json` + `recipe.sig` for capture) under `/etc/neutrino/`:
-   ```bash
-   sudo install -m 0640 -o root -g neutrino lease.json /etc/neutrino/lease.json
-   sudo install -m 0640 -o root -g neutrino lease.sig  /etc/neutrino/lease.sig
-   ```
-   Customer hosts operate air-gapped and never make external network connections.
-
-3. **Effective License**:
-   | Paper | `sku` | `apply` |
-   | --- | --- | --- |
-   | none / expired / bad sig | none | false (observe only) |
-   | valid Neutrino paper, `claims.apply` false | NEUTRINO | false |
-   | valid Neutrino paper, `claims.apply` true | NEUTRINO | true |
-
-Papers use canonical JSON + raw DSA-16 Level 3 signatures (1043 bytes). Ed25519 is retired. Leftover `license.sig` files are ignored.
-
----
-
-## Daily Use & Autopilot
-
-### 1. Wrap Work for Metering
 ```bash
-sudo neutrino-run --class compile --id build-1 -- make -j
-sudo neutrino-run --class batch --id nightly -- /usr/local/bin/nightly-job
+sudo neutrino license enroll-print
+```
+
+Transmit only `sku=NEUTRINO`, `node_id`, and `pk_sha256` to the license authority. Private keys (`/var/lib/neutrino/node.sk`) must never leave the host.
+
+### 2. Install Authorization Papers
+
+Place the signed cryptographic papers in the configuration directory:
+
+```bash
+sudo install -m 0640 -o root -g neutrino lease.json /etc/neutrino/lease.json
+sudo install -m 0640 -o root -g neutrino lease.sig  /etc/neutrino/lease.sig
+```
+
+### Licensing State
+
+| License File Status | Autonomous Optimization | Operational State |
+| --- | --- | --- |
+| Unlicensed / Expired / Invalid Signature | Disabled | Passive Metering (Observe Mode) |
+| Valid Signature, `claims.apply = false` | Disabled | Licensed Passive Metering |
+| Valid Signature, `claims.apply = true` | Enabled | Autonomous Governance (Apply Mode) |
+
+## Operator Commands
+
+### 1. Meter Workloads
+
+```bash
+# General CLI execution
+sudo neutrino-run --class compile --id build-01 -- make -j
+
+# Batch job execution
+sudo neutrino-run --class batch --id batch-run-01 -- /usr/local/bin/worker-job
+
+# Workload scheduler integration (e.g., Slurm)
 SLURM_JOB_ID=123 SLURM_JOB_CPUS=8 sudo neutrino-srun --class hpc -- ./solver
 ```
 
-### 2. Autopilot On (Whole Recipe)
-Autopilot is the product on-switch. Do not approve classes one by one unless debugging a single lever.
+### 2. Autopilot Management
+
+Autopilot coordinates governance across all approved profiles in the policy configuration:
 
 ```bash
-sudo neutrino apply preview          # Read-only; does NOT bind nonces
-sudo neutrino apply autopilot on     # Binds nonce once; arms eligible recipe classes
+# Dry run inspection (inspect without applying state)
+sudo neutrino apply preview
+
+# Engage autonomous governance across policy profiles
+sudo neutrino apply autopilot on
+
+# Check operational metrics and live status
 sudo neutrino apply status
 sudo neutrino report
-```
 
-- `apply preview` is read-only and leaves `seen_nonces.jsonl` untouched.
-- `autopilot on` binds the nonce once via Post-Quantum DSA-16 Level 3.
-- To stop governance and restore original configuration byte-identically:
-```bash
+# Disengage governance (instantly reverts to standard unoptimized execution)
 sudo neutrino apply autopilot off
 ```
 
-### 3. Debug Single Lever
-```bash
-sudo neutrino apply preview --class batch
-sudo neutrino apply approve --class batch
-sudo neutrino apply history --class batch
-```
+### 3. Telemetry Export
 
-### 4. Telemetry Export
 ```bash
 neutrino export --format jsonl
 neutrino export --format csv
 ```
 
----
+## Security Specifications
 
-## Security Envelope
+- **Network Surface:** Daemon binds exclusively to `127.0.0.1:8741`. It never listens on `0.0.0.0` or exposes WAN interfaces.
+- **Authentication:** Local administrative endpoints require Bearer token authorization; missing tokens fail closed.
+- **Actuation Isolation:** Actuation APIs are disabled (`403 Forbidden`). Neutrino introduces zero runtime RPC surfaces to alter host kernel dials.
+- **Cryptographic Boundary:** Host packages include verification runtimes strictly for signature and identity checks; offline signing engines are not distributed within host drops.
 
-- **Bind**: Loopback `127.0.0.1:8741` only. No `0.0.0.0`, no external listeners.
-- **Auth**: Bearer token for operator API routes. Missing token fails closed.
-- **Actuate**: Always `403 Forbidden`.
-- **Sudoers Path**: `/var/lib/neutrino/staging/neutrino-install.deb` only.
-- **Crypto on Host**: `libkltu_dsa16_l3.so` — verify + node keygen only. No `dsa16_sign`, no KEM, no AEAD in package.
+## Release Scope and Boundaries
 
----
+- **Packaging:** Binary release drop. Engine source code is private.
+- **Hardware Scope:** Validated for Intel x86_64 CPU package rails via RAPL. GPU metrics are not handled by this build.
+- **Empirical Verification:** Energy reporting is derived strictly from real-time execution telemetry on your host via `neutrino report`.
 
-## What This Drop Is NOT
-
-- Not source. Product development remains in the private repository.
-- Not a GPU / NVML build. CPU RAPL package rail only.
-- Not an SLA guarantee of figures in `sample-report.html`. Live savings are verified on the buyer node via `neutrino report`.
-
-Version **0.5.10**. Copyright (c) 2026 Xylonix. All rights reserved.
+Version 0.5.10. Copyright © 2026 Xylonix. All rights reserved.
