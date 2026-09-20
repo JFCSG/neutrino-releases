@@ -1,127 +1,76 @@
 # Neutrino Energy Governor 0.6.3
 
-Enterprise observe-first energy and performance accounting engine.
+**Use Autopilot.** Install, license, approve. Then stop. Neutrino applies policy to all savings classes with no further operator action.
 
-## Overview
+This repository ships **packages and docs only**, not engine source.
 
-**Neutrino Energy Governor 0.6.3** provides continuous, hardware-level CPU energy accounting and autonomous optimization across enterprise workloads:
+Autopilot classes: `compile`, `infer-cpu`, `batch`, `oltp`, `mq`, `hpc`, `render`.
 
-- **Observe Mode (Free)**: Passive, transparent metering of wrapped processes (`neutrino-run`, `neutrino-srun`, `neutrino-bsub`). Requires no licensing papers, external network access, or credentials.
-- **Apply / Autopilot Mode (Licensed)**: Activated by an offline cryptographically signed desk paper (`sku=NEUTRINO` with `claims.apply = true`). Autonomous governance optimizes eligible workloads based on live efficiency measurements.
-
-> **Repository Scope**: This repository distributes **packages and documentation only**, not engine source code.
+Not Autopilot: `etl`, `idle`, `heartbeat`, `unspecified`. GPU is not in this CPU release.
 
 ---
 
-## Autonomous Governance: 19+1 Autopilot
+## 1. Install (once)
 
-Neutrino 0.6.3 operates an autonomous, closed-loop 19+1 coverage model:
-
-- **19+1 Cycle**: Per workload class, Neutrino executes 19 optimized (wrapped) runs followed by 1 unoptimized (unwrapped) baseline reference run.
-- **Statistical Savings Gate**: A workload class remains covered and actively optimized if and only if measured savings meet the efficiency threshold ($\Delta E \le -5\%$) compared against the unwrap reference.
-- **Recipe Immortality**: The local recipe (`recipe.json`) serves as the node-owned coverage map and **never expires**. Expiration timestamps (`not_after`) in the recipe are treated as inert metadata.
-- **Single Clock Authority**: The offline authenticator-signed lease (`lease.json`) is the **sole clock authority** governing licensing validity.
-
----
-
-## Security Architecture & API Boundary
-
-- **Local Loopback Only**: The daemon binds strictly to `127.0.0.1:8741`. It never listens on external interfaces (`0.0.0.0`) or connects outbound.
-- **Immutable Actuation Boundary**: `POST /v1/actuate` strictly returns **403 Forbidden**. Neutrino does not expose remote or RPC actuation endpoints to alter kernel parameters; optimization is enforced purely through declarative local policies and process wrappers.
-- **Zero Secrets**: Host packages contain only signature verification keys; signing keys and private credentials are never distributed.
-
----
-
-## Verification & Installation
-
-Always verify package signatures and cryptographic checksums prior to installation.
-
-### 1. Verify Signed Manifest
+Download `neutrino_0.6.3_amd64.deb`, `SHA256SUMS`, and `SHA256SUMS.sig` from this release.
 
 ```bash
-# Verify debian package against DSA-16 Level 3 operator signature
 neutrino pkg verify neutrino_0.6.3_amd64.deb SHA256SUMS SHA256SUMS.sig
-```
-
-### 2. Stage and Install
-
-```bash
-# Stage in restricted directory (mode 0700)
 sudo install -d -m 0700 /var/lib/neutrino/staging
 sudo cp neutrino_0.6.3_amd64.deb /var/lib/neutrino/staging/neutrino-install.deb
-
-# Install package
 sudo dpkg -i /var/lib/neutrino/staging/neutrino-install.deb
 sudo neutrino-setup --validate
+curl -sS http://127.0.0.1:8741/health
+ss -ltn '( sport = :8741 )'    # 127.0.0.1:8741 only
 ```
 
-### 3. Service Verification
+## 2. License paper (once)
+
+Send **only** `node_id` and `pk_sha256` to Xylonix. Never send private keys. Do not call a public license server.
 
 ```bash
-# Ensure daemon is active and listening strictly on local loopback
-sudo systemctl status neutrino.service
-ss -ltn '( sport = :8741 )'   # 127.0.0.1:8741 only
-
-# Query daemon health
-curl -s http://127.0.0.1:8741/health
-```
-
----
-
-## Workload Profiles
-
-Neutrino categorizes execution profiles for accounting and governance:
-
-| Profile | Category | Scope |
-| --- | --- | --- |
-| `compile` | Build Systems | Compilation, linking, and artifact generation |
-| `infer-cpu` | AI / ML | CPU-bound model inference and scoring pipelines |
-| `batch` | Batch Compute | Throughput-intensive batch processing |
-| `oltp` | Data Processing | Transaction and record-oriented workloads |
-| `mq` | Event Pipelines | High-frequency persistence and message queues |
-| `hpc` | High-Performance Compute | Scheduler jobs (`SLURM_*`, LSF) |
-| `render` | Asset Generation | Visual processing and simulation rendering |
-| `etl` | Data Engineering | Stream and transform processing (meter-only floor) |
-| `idle` | System Baseline | Passive system baseline (meter-only floor) |
-| `heartbeat` | Health Check | Daemon diagnostic floor (meter-only floor) |
-| `unspecified` | Fallback | Unassigned workload envelope (meter-only floor) |
-
-### Protected System Targets
-
-To preserve infrastructure integrity, execution wrappers immediately reject wrapping critical system processes:
-- Database engines: `oracle`, `postgres`, `mariadbd`, `mysqld`
-- System supervisors and infrastructure: `sshd`, `systemd`, `neutrino.service`
-
----
-
-## Operator Usage
-
-```bash
-# General CLI execution (metered)
-sudo neutrino-run --class compile --id build-01 -- make -j
-
-# Scheduler integration (Slurm)
-SLURM_JOB_ID=101 SLURM_JOB_CPUS=8 sudo neutrino-srun --class hpc -- ./solver
-
-# Check system license and coverage state
+sudo neutrino license enroll-print
+sudo install -m 0640 -o root -g neutrino lease.json /etc/neutrino/lease.json
+sudo install -m 0640 -o root -g neutrino lease.sig  /etc/neutrino/lease.sig
 sudo neutrino license show
-
-# Telemetry export
-neutrino export --format jsonl
 ```
 
+Required: `sku=NEUTRINO`, `source=desk`, `apply=true`.
+
+## 3. Approve Autopilot (once)
+
+```bash
+for c in compile infer-cpu batch oltp mq hpc render; do
+  sudo neutrino apply preview --class "$c"
+  sudo neutrino apply approve --class "$c"
+done
+```
+
+**Setup is finished. Do not run anything else.**
+
 ---
 
-## Licensing State
+## Autopilot (no operator)
 
-| Authorization Paper | Operational State | Capability |
-| --- | --- | --- |
-| Unlicensed / Expired Lease | Observe Mode | Passive hardware energy metering |
-| Valid Lease, `claims.apply = false` | Licensed Observe | Passive metering under licensed terms |
-| Valid Lease, `claims.apply = true` | Apply / Autopilot Mode | Autonomous 19+1 governance across covered profiles |
-
-Private keys generated during enrollment must remain strictly on the host and must never be transmitted.
+- 19 optimized runs + 1 baseline per class, chosen by Neutrino
+- Coverage held iff \(\Delta E \le -5\%\) vs baseline
+- `recipe.json` never expires
+- Lease is the only clock. Expiry or `claims.apply=false` stops Autopilot; metering continues
+- `POST /v1/actuate` is always 403. Neutrino does not write governors or sysfs
+- Human again only for a new paper after expiry or revoke
 
 ---
+
+## Security
+
+- `127.0.0.1:8741` only. Never `0.0.0.0`.
+- Package contains verify keys only. Host private keys stay on the host.
+- Neutrino will not govern: `oracle`, `postgres`, `mariadbd`, `mysqld`, `sshd`, `systemd`.
+
+| Paper | Mode |
+| --- | --- |
+| None / expired lease | Observe (meter only) |
+| `sku=NEUTRINO`, `apply=false` | Licensed observe |
+| `sku=NEUTRINO`, `apply=true` + approve | **Autopilot — zero further operator action** |
 
 Copyright © 2026 Xylonix. All rights reserved.
