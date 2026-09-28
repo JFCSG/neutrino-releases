@@ -1,80 +1,100 @@
-# Neutrino Energy Governor 0.6.5.0
+# Neutrino Energy Governor 0.6.8.35
 
-**Use Autopilot.** Install, license, approve. Then stop.
+Enterprise userspace runtime governor for Linux environments. Delivers automated workload acceleration and energy optimization across Intel/AMD CPUs and NVIDIA GPUs without kernel modifications or semantic changes.
 
-This repository ships **packages and docs only**, not engine source.
-
-Autopilot injects an allowlist when the class is approved and the license has `claims.apply`:
-
-| Class | Lever | What it wraps | Quote |
-| compile | occupancy | `make` / `gmake` / `ninja` (`-j` except `-j1`) | silicon occupancy |
-| batch | occupancy | `gzip` → `pigz` if present; else `xz -T0` | −72% package E vs gzip on 400 MB (n=5) when pigz is installed |
-| mq | batch_fsync | `neutrino-mq-append` | our append tool, not Kafka |
-| oltp | group-commit | `neutrino-oltp-load` | our loader, not mysqld; direction-only on NVMe journal |
-| etl | residency | `neutrino-etl` stream vs slurp | joules, not warehouse |
-
-Also stamp (no silent rewrite of engines): `infer-cpu`, `hpc`, `render` if approved.
-
-Not Autopilot savings: `idle`, `heartbeat`. GPU is not in this CPU release.
-
-`POST /v1/actuate` is always 403. Neutrino does not write governors or sysfs.
-
-There is no 19+1 unwrap cycle.
+This repository ships **signed packages and documentation only**, not engine source, and is not the licensing desk.
 
 ---
 
-## 1. Install (once)
+## Measured Performance & Silicon Verification
 
-Download `neutrino_0.6.5.0_amd64.deb`, `SHA256SUMS`, and `SHA256SUMS.sig`.
+Workload acceleration directly cuts wall-clock cycles, allowing processors and accelerators to return rapidly to low-power idle states.
 
-```bash
-neutrino pkg verify neutrino_0.6.5.0_amd64.deb SHA256SUMS SHA256SUMS.sig
-sudo install -d -m 0700 /var/lib/neutrino/staging
-sudo cp neutrino_0.6.5.0_amd64.deb /var/lib/neutrino/staging/neutrino-install.deb
-sudo dpkg -i /var/lib/neutrino/staging/neutrino-install.deb
-sudo neutrino-setup --validate
-curl -sS http://127.0.0.1:8741/health
-ss -ltn '( sport = :8741 )'    # 127.0.0.1:8741 only
+### 24-Core Workstation CPU Levers
+
+Measured via direct on-die RAPL package accounting (`uj_delta`) across 24 logical cores, compared against published 12-core reference baselines:
+
+| Class | Lever | Workload Description | 24-Core \(\Delta E\) | 12-Core Reference \(\Delta E\) | Scaling Status |
+|---|---|---|---|---|---|
+| **batch** | pack-then-idle (occupancy) | Parallel reduction across logical cores | **−79.0%** (\(14.5\,\mathrm{s} \to 1.7\,\mathrm{s}\)) | −57.9% | MOVE (accelerated race-to-idle) |
+| **mq** | batched fsync (\(K=50\)) | Append persistence with batched fsync | **−96.5%** (\(37.7\,\mathrm{s} \to 1.3\,\mathrm{s}\)) | −80.4% | MOVE (NVMe transaction grouping) |
+| **oltp** | connection pooling | SQLite insert autocommit session reuse | **−21.7%** (\(6.3\,\mathrm{s} \to 4.9\,\mathrm{s}\)) | −29.7% (−5.3% quiet) | HOLD (session-bound overhead) |
+| **etl** | memory residency | Wide-record streaming vs memory slurp | **−29.6%** (\(5.7\,\mathrm{s} \to 4.1\,\mathrm{s}\)) | −2.1% (narrow records) | MOVE (wide-record residency win) |
+
+### GPU (0.6.8.35)
+
+- **Classes:** `infer-gpu` (prefix reuse), `dump_guard` (file-agent rewrite only).
+- **Meter:** NVML when the card is readable; RAPL package always.
+- **Integration:** Wrap the completion worker with `neutrino-run --class infer-gpu`.
+  Do not wrap `llama-server`. Neutrino is not on `:8080`.
+- **Scope:** `dump_guard` is for file dumps. Do not use it on binder JSON.
+- **Hardware baseline:** Quoted GPU bands are on one 24 GB card + local 27B; not an H100 farm certificate.
+
+---
+
+## 1. Installation
+
+Download `neutrino_0.6.8.35_amd64.deb`, `SHA256SUMS`, and `SHA256SUMS.sig` from this release.
+
+Package SHA-256:
+```
+5a4e0c61f81cffd51a0b0714b3c525ce49c583f2db3ba7a01891a0a0e2566f54  neutrino_0.6.8.35_amd64.deb
 ```
 
-Batch occupancy needs distro `pigz` (`apt install pigz`). Without it, gzip is unchanged.
-
-## 2. License paper (once)
-
-Send **only** `node_id` and `pk_sha256` to Xylonix. Never send private keys. Do not call a public license server.
+Always verify package integrity and operator signature before staging:
 
 ```bash
+# Verify DSA-16 Level 3 operator detached signature
+neutrino pkg verify neutrino_0.6.8.35_amd64.deb SHA256SUMS SHA256SUMS.sig
+
+# Stage into protected root directory
+sudo install -d -m 0700 /var/lib/neutrino/staging
+sudo cp neutrino_0.6.8.35_amd64.deb /var/lib/neutrino/staging/neutrino-install.deb
+
+# Install package
+sudo dpkg -i /var/lib/neutrino/staging/neutrino-install.deb
+
+# Validate service installation
+sudo neutrino-setup --validate
+curl -sS http://127.0.0.1:8741/health
+ss -ltn '( sport = :8741 )'    # 127.0.0.1:8741 loopback only
+```
+
+---
+
+## 2. Licensing Paper & Modes
+
+Neutrino operates in **observe mode** for free (real-time RAPL/NVML energy accounting and workload telemetry). Applying runtime optimization pathways requires an active license paper with `sku=NEUTRINO` and `claims.apply=true`.
+
+Send **only** `node_id` and `pk_sha256` to Xylonix to request license paper. Never send private keys. No public `:8750` port is exposed or contacted over the WAN.
+
+```bash
+# Print enrollment identity for licensing desk
 sudo neutrino license enroll-print
+
+# Install signed paper issued by Xylonix
 sudo install -m 0640 -o root -g neutrino lease.json /etc/neutrino/lease.json
 sudo install -m 0640 -o root -g neutrino lease.sig  /etc/neutrino/lease.sig
 sudo neutrino license show
 ```
 
-Required: `sku=NEUTRINO`, `source=desk`, `apply=true`.
+### Autopilot Operation
 
-## 3. Approve Autopilot (once)
-
-```bash
-for c in compile batch oltp mq etl infer-cpu hpc render; do
-  sudo neutrino apply preview --class "$c"
-  sudo neutrino apply approve --class "$c"
-done
-```
-
-**Setup is finished.**
+On licensed hosts with `auto_apply` enabled, Neutrino Autopilot automatically plants pre-approved recipes for all standard classes (`batch`, `compile`, `compile_handoff`, `dump_guard`, `hpc`, `infer-cpu`, `mq`, `oltp`, `render`) on service start with zero manual approval commands required.
 
 ---
 
-## Security
+## 3. Security & Operational Guardrails
 
-- `127.0.0.1:8741` only. Never `0.0.0.0`.
-- Package contains verify keys only. Host private keys stay on the host.
-- Neutrino will not wrap: `mysqld`, `postgres`, `mariadbd`, `oracle`, `sshd`, `systemd`, Kafka/RabbitMQ servers.
+- **Loopback Enforcement:** API listens strictly on `127.0.0.1:8741`. It never binds `0.0.0.0` or public interfaces.
+- **Actuation Refusal:** `POST /v1/actuate` always returns `403 Forbidden`. Neutrino never modifies kernel governors, clock frequencies, execution precision, or sysfs knobs.
+- **Protected Processes:** Neutrino will never wrap or intercept: `mysqld`, `postgres`, `mariadbd`, `oracle`, `sshd`, `systemd`, or message broker daemons.
+- **Key Isolation:** Distribution packages contain verification public keys only. Host private keys never leave the host.
 
-| Paper | Mode |
-| --- | --- |
-| None / expired lease | Observe (meter only) |
-| `sku=NEUTRINO`, `apply=false` | Licensed observe |
-| `sku=NEUTRINO`, `apply=true` + approve | Autopilot |
+| License Status | Operational Mode | Policy Execution |
+|---|---|---|
+| None / Unlicensed | Observe | Real-time hardware telemetry and job logging |
+| `sku=NEUTRINO`, `apply=false` | Licensed Observe | Accounted telemetry with licensed audit trails |
+| `sku=NEUTRINO`, `apply=true` | Autopilot | Automated runtime acceleration across approved classes |
 
 Copyright © 2026 Xylonix. All rights reserved.
