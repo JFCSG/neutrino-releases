@@ -43,39 +43,39 @@
 </head>
 <body>
   <div class="wrap">
-    <p class="brand">Neutrino · performance report</p>
-    <h1>Where the work gets faster, and where it gets cheaper</h1>
-    <p class="lede">Neutrino installs on the server you already have. On the work it is offered for, jobs finish sooner, each token costs less energy, or both. CPU package energy and GPU energy are metered separately, and they are never added together.</p>
-    <p class="note">Every figure is from one server. A gain applies to the work that was measured. The live record and the September checks are kept apart, and they are not blended into one estimate. Green is energy. Blue is speed.</p>
+    <p class="brand">Neutrino · enterprise evaluation</p>
+    <h1>Higher throughput, lower energy per unit of work</h1>
+    <p class="lede">Neutrino installs as a software layer on the Linux server you already run. It does not require new hardware. On the work measured here, jobs finish sooner, each token costs less energy, or both.</p>
+    <p class="note">Measurement. Every figure is a single-host comparison against an unmodified control on the same machine. The live record and the September 2026 checks are kept separate and are not blended into a fleet average. CPU package energy and GPU energy are metered independently and are never added together. Green is energy. Blue is speed.</p>
 
     <section class="section">
       <h2>Coding assistant and short chat, on the live server</h2>
-      <p>Measured on the host that is running Neutrino, against an untouched control on the same machine.</p>
+      <p>Taken from the host that is running Neutrino, against an untouched control on that host. These are not identical outputs: the assisted answers were longer.</p>
       <div class="hero">
         <article class="kpi">
           <div class="q">Coding assistant · energy</div>
           <div class="val">−28%</div>
           <p class="pair">7.75 → 5.60 joules per token</p>
-          <p class="sub">Tokens also arrive faster, 37 to 54 a second, a 46% gain. The assisted answer was longer, about 2,000 tokens against 800, so generation time moved from 19 seconds to 35.</p>
+          <p class="sub">Token rate rose from 37 to 54 a second, a 46% gain. The assisted answer was longer, about 2,000 tokens against 800, so completion time moved from 19 seconds to 35. The energy gain is per token, not a shorter job.</p>
         </article>
         <article class="kpi">
           <div class="q">Short chat · energy</div>
           <div class="val">−9%</div>
           <p class="pair">4.55 → 4.16 joules per token</p>
-          <p class="sub">A short reply still comes back in about two seconds.</p>
+          <p class="sub">A short reply still returns in about two seconds.</p>
         </article>
       </div>
     </section>
 
     <section class="section">
       <h2>Repeated CPU work</h2>
-      <p>Five matched runs of each job, on the same host, in September 2026. The input and the result are the same on both sides.</p>
+      <p>Mean of five matched runs of each job, on the same host, in September 2026. Input and result matched on both sides. This is one server, not a cluster.</p>
       <div class="hero">
         <article class="kpi">
           <div class="q">Repeated batch work · energy</div>
           <div class="val">−58%</div>
           <p class="pair">92 → 39 joules</p>
-          <p class="sub">The job itself is 60% shorter, 5.2 seconds to 2.1. About two and a half times as many of these jobs in an hour.</p>
+          <p class="sub">The job is 60% shorter, 5.2 seconds to 2.1. On this host, that is about two and a half times as many of these jobs in an hour.</p>
         </article>
         <article class="kpi">
           <div class="q">Order commits · energy</div>
@@ -87,8 +87,8 @@
     </section>
 
     <section class="section">
-      <h2>A repeated prompt, and several requests at once</h2>
-      <p>Two separate checks on 25 September 2026, on the local model, read from the GPU meter.</p>
+      <h2>Repeated prompts, and several requests at once</h2>
+      <p>Two separate GPU checks on 25 September 2026, on the local model. Energy is from the GPU meter, not from package power.</p>
       <div class="table-card">
         <table>
           <thead>
@@ -104,13 +104,13 @@
               <td>The same long prompt, used again</td>
               <td class="num"><span class="pct">−55%</span><br>1,000 → 446 J</td>
               <td class="num"><span class="pct speed">10×</span><br>1.58 s → 0.16 s to the first token</td>
-              <td>GPU energy for that generation falls by 55%. The first token comes back about ten times sooner. Decode stays near 86 tokens a second.</td>
+              <td>GPU energy for that generation falls by 55%. Time to the first token falls from 1.58 seconds to 0.16 seconds. Decode stays near 86 tokens a second.</td>
             </tr>
             <tr>
               <td>Four requests at once, same output length</td>
               <td class="num"><span class="pct">−55%</span><br>1,772 → 807 J</td>
               <td class="num"><span class="pct speed">2.1×</span><br>6.9 s → 3.3 s</td>
-              <td>GPU energy falls by 55%. The set finishes about twice as fast, and throughput rises from 74 to 156 tokens a second.</td>
+              <td>GPU energy for the set falls by 55%. The set finishes in 3.3 seconds instead of 6.9. Throughput rises from 74 to 156 tokens a second.</td>
             </tr>
           </tbody>
         </table>
@@ -118,7 +118,7 @@
     </section>
 
     <footer>
-      Performance report. Figures are from this server: the live record, and five matched runs in September. They are not a blended estate average. CPU package energy and GPU energy are measured on separate meters and never summed. Copyright © 2026 Xylonix Pte. Ltd. All rights reserved.
+      Performance report. Figures are from this server: the live record, and five matched runs in September 2026. They are not a fleet average. CPU package energy and GPU energy are measured on separate meters and never summed. Copyright © 2026 Xylonix Pte. Ltd. All rights reserved.
     </footer>
   </div>
 </body>
