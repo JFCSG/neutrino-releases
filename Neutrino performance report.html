@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neutrino performance report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,560;9..144,640&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f4efe6; --card: #fffdf8; --ink: #1c1914; --muted: #6a6358; --line: #ddd4c6;
+      --olive: #2c3f32; --save: #1b6b48; --info: #1d4e89; --shadow: 0 1px 0 rgba(28,25,20,.04), 0 12px 32px rgba(28,25,20,.06);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif; font-size: 16px; line-height: 1.55; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 32px 22px 80px; }
+    .brand { font-family: Fraunces, Georgia, serif; letter-spacing: .14em; text-transform: uppercase; color: var(--olive); font-size: 13px; font-weight: 640; margin: 0 0 8px; }
+    h1 { font-family: Fraunces, Georgia, serif; font-weight: 560; font-size: 36px; letter-spacing: -.02em; margin: 0 0 10px; line-height: 1.15; }
+    h2 { font-family: Fraunces, Georgia, serif; font-weight: 560; font-size: 24px; margin: 0 0 8px; }
+    .lede, p { margin: 0 0 14px; }
+    .lede { color: var(--muted); font-size: 17px; }
+    .section { margin: 36px 0; }
+    .note { background: #efe9dc; border-radius: 8px; padding: 12px 14px; margin: 0 0 16px; font-size: 14.5px; }
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 18px; }
+    .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 16px 14px; box-shadow: var(--shadow); }
+    .kpi .q { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .kpi .val { font-family: Fraunces, Georgia, serif; font-size: 40px; font-weight: 640; letter-spacing: -.03em; margin: 6px 0 4px; line-height: 1; color: var(--save); }
+    .kpi .val.speed { color: var(--info); }
+    .kpi .pair { font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+    .kpi .sub { font-size: 13.5px; color: var(--muted); margin: 0; }
+    .table-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: auto; box-shadow: var(--shadow); margin: 8px 0 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: #efe9dc; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+    td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .pct { font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 640; color: var(--save); letter-spacing: -.02em; }
+    .pct.speed { color: var(--info); }
+    footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    @media (max-width: 800px) { .hero { grid-template-columns: 1fr; } h1 { font-size: 30px; } .kpi .val { font-size: 34px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="brand">Neutrino · performance report</p>
+    <h1>Where the work gets faster, and where it gets cheaper</h1>
+    <p class="lede">Neutrino installs on the server you already have. On the work it is offered for, jobs finish sooner, each token costs less energy, or both. CPU package energy and GPU energy are metered separately, and they are never added together.</p>
+    <p class="note">Every figure is from one server. A gain applies to the work that was measured. The live record and the September checks are kept apart, and they are not blended into one estimate. Green is energy. Blue is speed.</p>
+
+    <section class="section">
+      <h2>Coding assistant and short chat, on the live server</h2>
+      <p>Measured on the host that is running Neutrino, against an untouched control on the same machine.</p>
+      <div class="hero">
+        <article class="kpi">
+          <div class="q">Coding assistant · energy</div>
+          <div class="val">−28%</div>
+          <p class="pair">7.75 → 5.60 joules per token</p>
+          <p class="sub">Tokens also arrive faster, 37 to 54 a second, a 46% gain. The assisted answer was longer, about 2,000 tokens against 800, so generation time moved from 19 seconds to 35.</p>
+        </article>
+        <article class="kpi">
+          <div class="q">Short chat · energy</div>
+          <div class="val">−9%</div>
+          <p class="pair">4.55 → 4.16 joules per token</p>
+          <p class="sub">A short reply still comes back in about two seconds.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Repeated CPU work</h2>
+      <p>Five matched runs of each job, on the same host, in September 2026. The input and the result are the same on both sides.</p>
+      <div class="hero">
+        <article class="kpi">
+          <div class="q">Repeated batch work · energy</div>
+          <div class="val">−58%</div>
+          <p class="pair">92 → 39 joules</p>
+          <p class="sub">The job itself is 60% shorter, 5.2 seconds to 2.1. About two and a half times as many of these jobs in an hour.</p>
+        </article>
+        <article class="kpi">
+          <div class="q">Order commits · energy</div>
+          <div class="val">−94%</div>
+          <p class="pair">456 → 27 joules</p>
+          <p class="sub">Time falls 94%, from 25 seconds to 1.5. About seventeen times the job rate. The result checksum matched.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>A repeated prompt, and several requests at once</h2>
+      <p>Two separate checks on 25 September 2026, on the local model, read from the GPU meter.</p>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Work</th>
+              <th class="num">Energy</th>
+              <th class="num">Speed</th>
+              <th>Reading</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>The same long prompt, used again</td>
+              <td class="num"><span class="pct">−55%</span><br>1,000 → 446 J</td>
+              <td class="num"><span class="pct speed">10×</span><br>1.58 s → 0.16 s to the first token</td>
+              <td>GPU energy for that generation falls by 55%. The first token comes back about ten times sooner. Decode stays near 86 tokens a second.</td>
+            </tr>
+            <tr>
+              <td>Four requests at once, same output length</td>
+              <td class="num"><span class="pct">−55%</span><br>1,772 → 807 J</td>
+              <td class="num"><span class="pct speed">2.1×</span><br>6.9 s → 3.3 s</td>
+              <td>GPU energy falls by 55%. The set finishes about twice as fast, and throughput rises from 74 to 156 tokens a second.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Performance report. Figures are from this server: the live record, and five matched runs in September. They are not a blended estate average. CPU package energy and GPU energy are measured on separate meters and never summed. Copyright © 2026 Xylonix Pte. Ltd. All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>
