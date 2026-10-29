@@ -2,7 +2,7 @@
 
 **Compute-Energy Optimization Application for Enterprise Linux Server Fleets**
 
-Version **0.6.8.40** · Linux amd64 · signed trial packages
+Version **0.6.8.41** · Linux amd64 · signed trial packages
 
 This repository ships **signed packages and documentation only**. It is not engine source and is not the licensing desk.
 
@@ -129,19 +129,19 @@ After these three steps there is **no class wrap, no job wrap, and no daily oper
 
 ### 1. Install the signed package
 
-Download `neutrino_0.6.8.40_amd64.deb`, `SHA256SUMS`, and `SHA256SUMS.sig` from this repository.
+Download `neutrino_0.6.8.41_amd64.deb`, `SHA256SUMS`, and `SHA256SUMS.sig` from this repository.
 
 Package SHA-256:
 
 ```
-7949b86235d33059a5712fe8eccac0b97677d5ac4dc24bfffbd611a03cc6f5d4  neutrino_0.6.8.40_amd64.deb
+be5031eba0ef52204281b287f6886819d38eeb166a0a5b16c385951f41918cdc  neutrino_0.6.8.41_amd64.deb
 ```
 
 ```bash
-neutrino pkg verify neutrino_0.6.8.40_amd64.deb SHA256SUMS SHA256SUMS.sig
+neutrino pkg verify neutrino_0.6.8.41_amd64.deb SHA256SUMS SHA256SUMS.sig
 
 sudo install -d -m 0700 /var/lib/neutrino/staging
-sudo cp neutrino_0.6.8.40_amd64.deb /var/lib/neutrino/staging/neutrino-install.deb
+sudo cp neutrino_0.6.8.41_amd64.deb /var/lib/neutrino/staging/neutrino-install.deb
 sudo dpkg -i /var/lib/neutrino/staging/neutrino-install.deb
 
 sudo neutrino-setup --validate
